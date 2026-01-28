@@ -1,0 +1,14 @@
+
+la connexion DB: 
+
+host: localhost
+port: 5433
+user: unipilot
+password: unipilot
+database: unipilot_db
+
+Commande pour intaller NestJS: npx @nestjs/cli new api
+
+Pour lancer l'API: cd api
+npm run start:dev
+

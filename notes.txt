@@ -12,3 +12,6 @@ Commande pour intaller NestJS: npx @nestjs/cli new api
 Pour lancer l'API: cd api
 npm run start:dev
 
+Commande pour le projectID: Invoke-RestMethod -Method Get -Uri http://localhost:3002/projects
+
+

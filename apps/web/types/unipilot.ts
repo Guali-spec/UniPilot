@@ -6,6 +6,7 @@ export interface Project {
   stack?: string
   constraints?: string
   createdAt: string
+  updatedAt?: string;
 }
 
 export interface Session {
@@ -27,6 +28,9 @@ export interface ChatMessage {
 export interface AntiCheatResult {
   label: 'allowed' | 'borderline' | 'cheating'
   reason: string
+  score?: number;
+  category?: string;
+  severity?: string;
 }
 
 export interface ChatMeta {
@@ -36,3 +40,15 @@ export interface ChatMeta {
 }
 
 export type ChatMode = 'coach' | 'planning' | 'debug'
+export type ChatResponse = {
+  sessionId: string;
+  assistant: {
+    id: string;
+    sessionId: string;
+    role: 'assistant';
+    content: string;
+    createdAt: string;
+  };
+  antiCheat: AntiCheatResult;
+  meta: ChatMeta;
+};

@@ -206,29 +206,25 @@ export default function UniPilotPage() {
       setMessages((prev) => [...prev, tempUserMessage])
       setIsSending(true)
 
-      try {
-        const response = await api.sendMessage({
-          sessionId: currentSession.id,
-          mode,
-          message: userMessage,
-        })
+try {
+  // ✅ backend returns { assistant: { id, content, ... }, antiCheat, meta }
+  const response = await api.sendMessage({
+    sessionId: currentSession.id,
+    mode,
+    message: userMessage,
+  })
 
-        // ✅ backend returns { assistant: { id, content, ... }, antiCheat, meta }
-        const assistantRecord = response.assistant
-        const assistantText =
-          typeof assistantRecord === 'string' ? assistantRecord : assistantRecord?.content ?? ''
+  const assistantMessage: MessageWithMeta = {
+    id: response.assistant.id,
+    role: 'assistant',
+    content: response.assistant.content,
+    createdAt: response.assistant.createdAt,
+    meta: response.meta,
+    antiCheat: response.antiCheat,
+  }
 
-        const assistantMessage: MessageWithMeta = {
-          id: assistantRecord?.id ?? `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: assistantText,
-          createdAt: assistantRecord?.createdAt ?? new Date().toISOString(),
-          meta: response.meta,
-          antiCheat: response.antiCheat,
-        }
-
-        setMessages((prev) => [...prev, assistantMessage])
-      } catch (error) {
+  setMessages((prev) => [...prev, assistantMessage])
+ } catch (error) {
         // Remove optimistic message on error
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id))
         toast.error('Failed to send message', {

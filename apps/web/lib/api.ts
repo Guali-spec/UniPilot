@@ -1,101 +1,50 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003'
 
-async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${baseUrl}${endpoint}`, {
-    ...options,
+import type { Project, Session, ChatMessage, ChatResponse } from '@/types/unipilot';
+
+
+const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3003';
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${baseUrl}${path}`, {
+    ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...(init?.headers ?? {}),
     },
-  })
+    cache: 'no-store',
+  });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Request failed' }))
-    throw new Error(error.message || `HTTP ${res.status}`)
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
   }
 
-  return res.json()
+  return res.json() as Promise<T>;
 }
 
 export const api = {
-  // Projects
-  getProjects: () => request<Project[]>('/projects'),
-  createProject: (data: CreateProjectData) =>
-    request<Project>('/projects', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  createProject: async (data: unknown) =>
+    request('/projects', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Sessions
-  getSessions: (projectId: string) =>
-    request<Session[]>(`/sessions?projectId=${projectId}`),
-  createSession: (data: { projectId: string; name: string }) =>
-    request<Session>('/sessions', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  getProjects: async () => request('/projects', { method: 'GET' }),
 
-  // Chat
-  sendMessage: (data: { sessionId: string; mode?: ChatMode; message: string }) =>
-    request<ChatResponse>('/chat', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  getChatHistory: (sessionId: string) =>
-    request<ChatMessage[]>(`/chat/history?sessionId=${sessionId}`),
-  getAntiCheat: (sessionId: string, take = 10) =>
-    request<AntiCheatResult[]>(`/sessions/${sessionId}/anti-cheat?take=${take}`),
-}
+  getSessions: async (projectId: string) =>
+    request(`/projects/${projectId}/sessions`, { method: 'GET' }),
 
-// Types
-export interface Project {
-  id: string
-  title: string
-  level?: string
-  domain?: string
-  stack?: string
-  constraints?: string
-  createdAt: string
-}
+  createSession: async (data: unknown) =>
+    request('/sessions', { method: 'POST', body: JSON.stringify(data) }),
 
-export interface CreateProjectData {
-  title: string
-  level?: string
-  domain?: string
-  stack?: string
-  constraints?: string
-}
+  getChatHistory: async (sessionId: string) =>
+    request(`/sessions/${sessionId}/chat`, { method: 'GET' }),
 
-export interface Session {
-  id: string
-  projectId: string
-  name: string
-  createdAt: string
-}
+  sendMessage: async (data: unknown) =>
+    request('/chat/send', { method: 'POST', body: JSON.stringify(data) }),
 
-export interface ChatMessage {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  createdAt: string
-}
+  getAntiCheat: async (sessionId: string, limit: number) =>
+    request(`/sessions/${sessionId}/anti-cheat?limit=${limit}`, { method: 'GET' }),
 
-export interface AntiCheatResult {
-  label: 'allowed' | 'borderline' | 'cheating'
-  reason: string
-}
+  get: <T>(path: string) => request<T>(path),
 
-export interface ChatMeta {
-  mode: ChatMode
-  model: string
-  latencyMs: number
-}
-
-export interface ChatResponse {
-  sessionId: string
-  assistant: string
-  antiCheat: AntiCheatResult
-  meta: ChatMeta
-}
-
-export type ChatMode = 'coach' | 'planning' | 'debug'
+  post: <T>(path: string, body: unknown) =>
+    request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+};

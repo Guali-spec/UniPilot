@@ -1,3 +1,4 @@
+import { ensureUniPilotFormat } from './format.guard';
 import { Injectable } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { UNIPILOT_SYSTEM_PROMPT } from './system.prompt';
@@ -34,6 +35,9 @@ async generate(userMessage: string, context?: string, history?: string) {
 
   try {
     const result = await this.model.generateContent(prompt);
+    const raw = result.response.text();
+    return ensureUniPilotFormat(raw);
+
     return result.response.text();
   } catch (err: any) {
     console.error('Gemini error details:', err);

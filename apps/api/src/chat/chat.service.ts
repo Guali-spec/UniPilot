@@ -30,6 +30,20 @@ export class ChatService {
 const cheatDetection = detectCheating(userMessage);
 const antiCheatInstruction = buildAntiCheatInstruction(cheatDetection);
 
+// mode must be defined before using it in the DB log
+const mode = dto.mode ?? 'coach';
+
+await this.prisma.antiCheatEvent.create({
+  data: {
+    sessionId: dto.sessionId,
+    label: cheatDetection.label,
+    reason: cheatDetection.reason,
+    mode,
+    message: userMessage.slice(0, 500), // garde une trace courte
+  },
+});
+
+
     this.logger.log(
   `[anti-cheat] session=${dto.sessionId} label=${cheatDetection.label} reason=${cheatDetection.reason}`,
 );
@@ -81,22 +95,37 @@ Contraintes: ${session.project.constraints ?? 'aucune'}
       .join('\n');
 
     // 7) appel Gemini
-    const mode = dto.mode ?? 'coach';
     const modeHint = `MODE: ${mode}`;
 
-    const assistantText = await this.llm.generate(
+    
+
+    const t0 = Date.now();
+const llmResult = await this.llm.generate(
   userMessage,
   `${modeHint}\n${antiCheatInstruction}\n${context}`,
   historyText,
 );
+const latencyMs = Date.now() - t0;
 
+const assistantText = llmResult.text;
+const model = llmResult.model;
 
     // 8) stocker réponse assistant
     const assistant = await this.prisma.chatMessage.create({
       data: { sessionId: dto.sessionId, role: 'assistant', content: assistantText },
     });
 
-   return { sessionId: dto.sessionId, assistant, antiCheat: cheatDetection };
+   return {
+  sessionId: dto.sessionId,
+  assistant,
+  antiCheat: cheatDetection,
+  meta: {
+    mode,
+    model,
+    latencyMs,
+  },
+};
+
 
   }
 

@@ -40,3 +40,18 @@ model ChatMessage {
 
   @@index([sessionId])
 }
+
+model AntiCheatLog {
+  id        String      @id @default(cuid())
+  sessionId String
+  messageId String?
+  label     String
+  reason    String
+  createdAt DateTime    @default(now())
+
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  message   ChatMessage? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([messageId])
+}

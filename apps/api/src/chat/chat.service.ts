@@ -52,9 +52,12 @@ Contraintes: ${session.project.constraints ?? 'aucune'}
   const historyText = trimmedHistory
     .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
     .join('\n');
+    const mode = dto.mode ?? 'coach';
+    const modeHint = `MODE: ${mode}`;
+    const assistantText = await this.llm.generate(dto.message, `${modeHint}\n${context}`, historyText);
 
   // 7) appel Gemini
-  const assistantText = await this.llm.generate(dto.message, context, historyText);
+  
 
   // 8) stocker réponse assistant
   const assistant = await this.prisma.chatMessage.create({

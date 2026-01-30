@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class ChatDto {
   @IsString()
@@ -6,4 +6,8 @@ export class ChatDto {
 
   @IsString()
   message: string;
+
+  @IsOptional()
+  @IsIn(['coach', 'planning', 'debug'])
+  mode?: 'coach' | 'planning' | 'debug';
 }

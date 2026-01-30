@@ -42,6 +42,11 @@ export default function UniPilotPage() {
       try {
         const data = await api.getProjects()
         setProjects(data)
+
+        // ✅ auto-select first project if none selected
+        if (!selectedProjectId && data.length > 0) {
+          setSelectedProjectId(data[0].id)
+        }
       } catch (error) {
         toast.error('Failed to load projects', {
           description: error instanceof Error ? error.message : 'Unknown error',
@@ -51,6 +56,7 @@ export default function UniPilotPage() {
       }
     }
     fetchProjects()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Fetch sessions when project changes
@@ -67,7 +73,8 @@ export default function UniPilotPage() {
       try {
         const data = await api.getSessions(selectedProjectId)
         setSessions(data)
-        // Auto-select first session if available
+
+        // ✅ auto-select first session if available
         if (data.length > 0) {
           setCurrentSession(data[0])
         } else {
@@ -95,16 +102,14 @@ export default function UniPilotPage() {
     const fetchMessages = async () => {
       setIsLoadingMessages(true)
       try {
-        const [historyData, antiCheatData] = await Promise.all([
-          api.getChatHistory(currentSession.id),
-          api.getAntiCheat(currentSession.id, 50).catch(() => []),
-        ])
-        
-        // Merge anti-cheat data with messages
+        const historyData = await api.getChatHistory(currentSession.id)
+        // anti-cheat events endpoint exists, but merging is optional for now
+        // await api.getAntiCheat(currentSession.id, 50).catch(() => [])
+
         const messagesWithMeta: MessageWithMeta[] = historyData.map((msg) => ({
           ...msg,
         }))
-        
+
         setMessages(messagesWithMeta)
       } catch (error) {
         toast.error('Failed to load chat history', {
@@ -127,6 +132,7 @@ export default function UniPilotPage() {
       const newProject = await api.createProject(data)
       setProjects((prev) => [newProject, ...prev])
       setSelectedProjectId(newProject.id)
+
       toast.success('Project created', {
         description: `"${newProject.title}" is ready to use.`,
       })
@@ -142,69 +148,84 @@ export default function UniPilotPage() {
     setCurrentSession(session)
   }, [])
 
-  const handleCreateSession = useCallback(async (name: string) => {
-    if (!selectedProjectId) return
+  const handleCreateSession = useCallback(
+    async (name: string) => {
+      if (!selectedProjectId) return
 
-    try {
-      const newSession = await api.createSession({
-        projectId: selectedProjectId,
-        name,
-      })
-      setSessions((prev) => [newSession, ...prev])
-      setCurrentSession(newSession)
-      setMessages([])
-      toast.success('Session created', {
-        description: `"${name}" session is ready.`,
-      })
-    } catch (error) {
-      toast.error('Failed to create session', {
-        description: error instanceof Error ? error.message : 'Unknown error',
-      })
-      throw error
-    }
-  }, [selectedProjectId])
+      try {
+        const newSession = await api.createSession({
+          projectId: selectedProjectId,
+          name,
+        })
+        setSessions((prev) => [newSession, ...prev])
+        setCurrentSession(newSession)
+        setMessages([])
 
-  const handleSendMessage = useCallback(async (message: string, mode: ChatMode) => {
-    if (!currentSession) return
+        toast.success('Session created', {
+          description: `"${name}" session is ready.`,
+        })
+      } catch (error) {
+        toast.error('Failed to create session', {
+          description: error instanceof Error ? error.message : 'Unknown error',
+        })
+        throw error
+      }
+    },
+    [selectedProjectId],
+  )
 
-    // Optimistic update - add user message
-    const tempUserMessage: MessageWithMeta = {
-      id: `temp-${Date.now()}`,
-      role: 'user',
-      content: message,
-      createdAt: new Date().toISOString(),
-    }
-    setMessages((prev) => [...prev, tempUserMessage])
-    setIsSending(true)
+  const handleSendMessage = useCallback(
+    async (message: string, mode: ChatMode) => {
+      if (!currentSession) return
 
-    try {
-      const response = await api.sendMessage({
-        sessionId: currentSession.id,
-        mode,
-        message,
-      })
+      const userMessage = (message ?? '').trim()
+      if (!userMessage) return
 
-      // Add assistant response with meta
-      const assistantMessage: MessageWithMeta = {
-        id: `resp-${Date.now()}`,
-        role: 'assistant',
-        content: response.assistant,
+      // Optimistic update - add user message
+      const tempUserMessage: MessageWithMeta = {
+        id: `temp-${Date.now()}`,
+        role: 'user',
+        content: userMessage,
         createdAt: new Date().toISOString(),
-        meta: response.meta,
-        antiCheat: response.antiCheat,
       }
 
-      setMessages((prev) => [...prev, assistantMessage])
-    } catch (error) {
-      // Remove optimistic message on error
-      setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id))
-      toast.error('Failed to send message', {
-        description: error instanceof Error ? error.message : 'Unknown error',
-      })
-    } finally {
-      setIsSending(false)
-    }
-  }, [currentSession])
+      setMessages((prev) => [...prev, tempUserMessage])
+      setIsSending(true)
+
+      try {
+        const response = await api.sendMessage({
+          sessionId: currentSession.id,
+          mode,
+          message: userMessage,
+        })
+
+        // ✅ backend returns { assistant: { id, content, ... }, antiCheat, meta }
+        const assistantRecord = response.assistant
+        const assistantText =
+          typeof assistantRecord === 'string' ? assistantRecord : assistantRecord?.content ?? ''
+
+        const assistantMessage: MessageWithMeta = {
+          id: assistantRecord?.id ?? `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: assistantText,
+          createdAt: assistantRecord?.createdAt ?? new Date().toISOString(),
+          meta: response.meta,
+          antiCheat: response.antiCheat,
+        }
+
+        setMessages((prev) => [...prev, assistantMessage])
+      } catch (error) {
+        // Remove optimistic message on error
+        setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id))
+        toast.error('Failed to send message', {
+          description: error instanceof Error ? error.message : 'Unknown error',
+        })
+      } finally {
+        setIsSending(false)
+      }
+    },
+    [currentSession],
+  )
 
   return (
     <div className="flex h-screen bg-background">
@@ -231,7 +252,6 @@ export default function UniPilotPage() {
         />
       </main>
 
-      {/* Dialogs */}
       <ProjectDialog
         open={projectDialogOpen}
         onOpenChange={setProjectDialogOpen}

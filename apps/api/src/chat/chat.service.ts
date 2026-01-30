@@ -49,15 +49,30 @@ Contraintes: ${session.project.constraints ?? 'aucune'}
   });
 
   // 6) historique compact
-  const historyText = trimmedHistory
-    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n');
-    const mode = dto.mode ?? 'coach';
-    const modeHint = `MODE: ${mode}`;
-    const assistantText = await this.llm.generate(dto.message, `${modeHint}\n${context}`, historyText);
+  const MAX_CHARS_PER_MESSAGE = 800;
+
+const historyText = trimmedHistory
+  .map((m) => {
+    const content =
+      m.content.length > MAX_CHARS_PER_MESSAGE
+        ? m.content.slice(0, MAX_CHARS_PER_MESSAGE) + '…'
+        : m.content;
+
+    return `${m.role.toUpperCase()}: ${content}`;
+  })
+  .join('\n');
 
   // 7) appel Gemini
+  // Déterminer le mode (coach par défaut)
+const mode = dto.mode ?? 'coach';
+const modeHint = `MODE: ${mode}`;
+
   
+const assistantText = await this.llm.generate(
+  dto.message,
+  `${modeHint}\n${context}`,
+  historyText,
+);
 
   // 8) stocker réponse assistant
   const assistant = await this.prisma.chatMessage.create({

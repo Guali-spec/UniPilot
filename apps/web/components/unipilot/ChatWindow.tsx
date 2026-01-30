@@ -45,15 +45,15 @@ export function ChatWindow({
   isLoadingMessages,
   isSending,
 }: ChatWindowProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+
   const [mode, setMode] = useState<ChatMode>('coach')
 
   // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages])
+ useEffect(() => {
+  bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+}, [messages, isSending])
+
 
   // Empty state - no project selected
   if (!project) {
@@ -76,6 +76,8 @@ export function ChatWindow({
             </Button>
           </div>
         </Card>
+        <div ref={bottomRef} />
+
       </div>
     )
   }
@@ -152,7 +154,7 @@ export function ChatWindow({
       </header>
 
       {/* Messages area */}
-      <ScrollArea className="flex-1" ref={scrollRef}>
+      <ScrollArea className="flex-1">
         <div className="mx-auto max-w-3xl space-y-4 p-6">
           {isLoadingMessages ? (
             <div className="space-y-4">

@@ -37,19 +37,8 @@ const antiCheatInstruction = buildAntiCheatInstruction(cheatDetection);
 
 
     // 1) stocker message user
-    const userMsg = await this.prisma.chatMessage.create({
+    await this.prisma.chatMessage.create({
       data: { sessionId: dto.sessionId, role: 'user', content: userMessage },
-    });
-
-    // 1.b) log anti-cheat detection in DB (trace)
-    // We persist all detections to allow later analysis/auditing.
-    await this.prisma.antiCheatLog.create({
-      data: {
-        sessionId: dto.sessionId,
-        messageId: userMsg.id,
-        label: cheatDetection.label,
-        reason: cheatDetection.reason,
-      },
     });
 
     // 2) construire le contexte projet

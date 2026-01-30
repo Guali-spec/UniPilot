@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ChatDto } from './dto/chat.dto';
 import { LlmService } from '../llm/llm.service';
 import { detectCheating } from '../llm/cheat.detector';
+import { buildAntiCheatInstruction } from '../llm/anti-cheat.policy';
 
 
 @Injectable()
@@ -27,6 +28,7 @@ export class ChatService {
 
     // 8.2.1 — Détection de triche
 const cheatDetection = detectCheating(userMessage);
+const antiCheatInstruction = buildAntiCheatInstruction(cheatDetection);
 
     this.logger.log(
   `[anti-cheat] session=${dto.sessionId} label=${cheatDetection.label} reason=${cheatDetection.reason}`,
@@ -83,10 +85,11 @@ Contraintes: ${session.project.constraints ?? 'aucune'}
     const modeHint = `MODE: ${mode}`;
 
     const assistantText = await this.llm.generate(
-      userMessage,
-      `${modeHint}\n${context}`,
-      historyText,
-    );
+  userMessage,
+  `${modeHint}\n${antiCheatInstruction}\n${context}`,
+  historyText,
+);
+
 
     // 8) stocker réponse assistant
     const assistant = await this.prisma.chatMessage.create({

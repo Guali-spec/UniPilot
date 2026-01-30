@@ -59,6 +59,18 @@ export default function UniPilotPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const loadSessions = useCallback(async (projectId: string) => {
+  setIsLoadingSessions(true)
+  try {
+    const data = await api.getSessions(projectId)
+    setSessions(data)
+    return data
+  } finally {
+    setIsLoadingSessions(false)
+  }
+}, [])
+
+
   // Fetch sessions when project changes
   useEffect(() => {
     if (!selectedProjectId) {
@@ -76,11 +88,13 @@ export default function UniPilotPage() {
 
         // ✅ auto-select first session if available
         if (data.length > 0) {
-          setCurrentSession(data[0])
-        } else {
-          setCurrentSession(null)
-          setMessages([])
-        }
+  setCurrentSession(data[0])
+} else {
+  setCurrentSession(null)
+  setMessages([])
+  setSessionDialogOpen(true) // ✅ prompt create session
+}
+
       } catch (error) {
         toast.error('Failed to load sessions', {
           description: error instanceof Error ? error.message : 'Unknown error',

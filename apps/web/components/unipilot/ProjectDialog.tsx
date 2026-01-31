@@ -21,6 +21,7 @@ interface ProjectDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: ProjectFormData) => Promise<void>
+  lang?: 'fr' | 'en'
 }
 
 export interface ProjectFormData {
@@ -35,6 +36,7 @@ export function ProjectDialog({
   open,
   onOpenChange,
   onSubmit,
+  lang = 'fr',
 }: ProjectDialogProps) {
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
@@ -63,17 +65,27 @@ export function ProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+          <DialogTitle>
+            {lang === 'fr' ? 'Nouveau projet' : 'Create New Project'}
+          </DialogTitle>
           <DialogDescription>
-            Set up a new project with its context for better AI assistance.
+            {lang === 'fr'
+              ? 'Ajoute un projet et son contexte pour de meilleures réponses.'
+              : 'Set up a new project with its context for better AI assistance.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Project Title *</Label>
+            <Label htmlFor="title">
+              {lang === 'fr' ? 'Titre du projet *' : 'Project Title *'}
+            </Label>
             <Input
               id="title"
-              placeholder="e.g., CS101 Data Structures"
+              placeholder={
+                lang === 'fr'
+                  ? 'ex: Projet systèmes embarqués'
+                  : 'e.g., CS101 Data Structures'
+              }
               value={formData.title}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
@@ -84,10 +96,12 @@ export function ProjectDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="level">Level</Label>
+              <Label htmlFor="level">{lang === 'fr' ? 'Niveau' : 'Level'}</Label>
               <Input
                 id="level"
-                placeholder="e.g., Undergraduate"
+                placeholder={
+                  lang === 'fr' ? 'ex: Licence 2' : 'e.g., Undergraduate'
+                }
                 value={formData.level}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, level: e.target.value }))
@@ -95,10 +109,12 @@ export function ProjectDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="domain">Domain</Label>
+              <Label htmlFor="domain">{lang === 'fr' ? 'Domaine' : 'Domain'}</Label>
               <Input
                 id="domain"
-                placeholder="e.g., Computer Science"
+                placeholder={
+                  lang === 'fr' ? 'ex: Informatique' : 'e.g., Computer Science'
+                }
                 value={formData.domain}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, domain: e.target.value }))
@@ -108,10 +124,14 @@ export function ProjectDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="stack">Tech Stack</Label>
+            <Label htmlFor="stack">{lang === 'fr' ? 'Stack' : 'Tech Stack'}</Label>
             <Input
               id="stack"
-              placeholder="e.g., Python, React, PostgreSQL"
+              placeholder={
+                lang === 'fr'
+                  ? 'ex: Python, React, PostgreSQL'
+                  : 'e.g., Python, React, PostgreSQL'
+              }
               value={formData.stack}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, stack: e.target.value }))
@@ -120,10 +140,16 @@ export function ProjectDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="constraints">Constraints / Notes</Label>
+            <Label htmlFor="constraints">
+              {lang === 'fr' ? 'Contraintes / Notes' : 'Constraints / Notes'}
+            </Label>
             <Textarea
               id="constraints"
-              placeholder="e.g., Must use recursion, no external libraries"
+              placeholder={
+                lang === 'fr'
+                  ? "ex: Utiliser la récursivité, pas de libs externes"
+                  : 'e.g., Must use recursion, no external libraries'
+              }
               value={formData.constraints}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, constraints: e.target.value }))
@@ -139,11 +165,11 @@ export function ProjectDialog({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {lang === 'fr' ? 'Annuler' : 'Cancel'}
             </Button>
             <Button type="submit" disabled={isSubmitting || !formData.title.trim()}>
               {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : null}
-              Create Project
+              {lang === 'fr' ? 'Créer' : 'Create Project'}
             </Button>
           </DialogFooter>
         </form>

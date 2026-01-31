@@ -25,16 +25,22 @@ export function MessageBubble({ message, meta, antiCheat }: MessageBubbleProps) 
     >
       <div
         className={cn(
-          'max-w-[80%] rounded-2xl px-4 py-3',
+          'max-w-[82%] rounded-3xl px-5 py-4 shadow-sm',
           isUser
             ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-foreground'
+            : 'border border-border/70 bg-card text-foreground'
         )}
       >
+        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <span className={cn(isUser ? 'text-primary-foreground/70' : '')}>
+            {isUser ? 'You' : 'UniPilot'}
+          </span>
+        </div>
+
         {isUser ? (
-          <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
         ) : (
-          <div className="prose prose-sm prose-invert max-w-none">
+          <div className="prose prose-sm max-w-none text-foreground">
             <ReactMarkdown
               components={{
                 code({ className, children, ...props }) {
@@ -42,7 +48,7 @@ export function MessageBubble({ message, meta, antiCheat }: MessageBubbleProps) 
                   const isInline = !match
                   return isInline ? (
                     <code
-                      className="rounded bg-background/50 px-1.5 py-0.5 font-mono text-xs"
+                      className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs"
                       {...props}
                     >
                       {children}
@@ -59,22 +65,22 @@ export function MessageBubble({ message, meta, antiCheat }: MessageBubbleProps) 
                   )
                 },
                 p({ children }) {
-                  return <p className="mb-2 last:mb-0">{children}</p>
+                  return <p className="mb-3 leading-relaxed last:mb-0">{children}</p>
                 },
                 ul({ children }) {
-                  return <ul className="mb-2 list-disc pl-4">{children}</ul>
+                  return <ul className="mb-3 list-disc pl-5">{children}</ul>
                 },
                 ol({ children }) {
-                  return <ol className="mb-2 list-decimal pl-4">{children}</ol>
+                  return <ol className="mb-3 list-decimal pl-5">{children}</ol>
                 },
                 h1({ children }) {
-                  return <h1 className="mb-2 text-lg font-bold">{children}</h1>
+                  return <h1 className="mb-3 text-lg font-semibold">{children}</h1>
                 },
                 h2({ children }) {
-                  return <h2 className="mb-2 text-base font-bold">{children}</h2>
+                  return <h2 className="mb-3 text-base font-semibold">{children}</h2>
                 },
                 h3({ children }) {
-                  return <h3 className="mb-2 text-sm font-bold">{children}</h3>
+                  return <h3 className="mb-3 text-sm font-semibold">{children}</h3>
                 },
               }}
             >
@@ -85,7 +91,7 @@ export function MessageBubble({ message, meta, antiCheat }: MessageBubbleProps) 
 
         {/* Meta info for assistant messages */}
         {!isUser && (meta || antiCheat) && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border/50 pt-2 text-xs text-muted-foreground">
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3 text-xs text-muted-foreground">
             {meta && (
               <>
                 <span className="font-mono">{meta.model}</span>

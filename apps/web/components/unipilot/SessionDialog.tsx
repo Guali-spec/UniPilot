@@ -21,6 +21,7 @@ interface SessionDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (name: string) => Promise<void>
   projectTitle?: string
+  lang?: 'fr' | 'en'
 }
 
 export function SessionDialog({
@@ -28,6 +29,7 @@ export function SessionDialog({
   onOpenChange,
   onSubmit,
   projectTitle,
+  lang = 'fr',
 }: SessionDialogProps) {
   const [name, setName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,19 +52,31 @@ export function SessionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>New Chat Session</DialogTitle>
+          <DialogTitle>
+            {lang === 'fr' ? 'Nouvelle session' : 'New Chat Session'}
+          </DialogTitle>
           <DialogDescription>
             {projectTitle
-              ? `Start a new session for "${projectTitle}"`
-              : 'Create a named session to organize your conversations.'}
+              ? lang === 'fr'
+                ? `Nouvelle session pour "${projectTitle}"`
+                : `Start a new session for "${projectTitle}"`
+              : lang === 'fr'
+                ? 'Crée une session pour organiser tes échanges.'
+                : 'Create a named session to organize your conversations.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="session-name">Session Name</Label>
+            <Label htmlFor="session-name">
+              {lang === 'fr' ? 'Nom de la session' : 'Session Name'}
+            </Label>
             <Input
               id="session-name"
-              placeholder="e.g., Homework 3 - Binary Trees"
+              placeholder={
+                lang === 'fr'
+                  ? 'ex: Devoir 3 - Arbres'
+                  : 'e.g., Homework 3 - Binary Trees'
+              }
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
@@ -77,11 +91,11 @@ export function SessionDialog({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {lang === 'fr' ? 'Annuler' : 'Cancel'}
             </Button>
             <Button type="submit" disabled={isSubmitting || !name.trim()}>
               {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : null}
-              Create Session
+              {lang === 'fr' ? 'Créer' : 'Create Session'}
             </Button>
           </DialogFooter>
         </form>

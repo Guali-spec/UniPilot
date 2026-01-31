@@ -21,24 +21,13 @@ interface GlowingInputProps {
   onModeChange: (mode: ChatMode) => void
   onSend: (message: string, mode: ChatMode) => Promise<void>
   disabled?: boolean
+  lang?: 'fr' | 'en'
 }
 
-const modeConfig: Record<ChatMode, { label: string; icon: typeof Sparkles; description: string }> = {
-  coach: {
-    label: 'Coach',
-    icon: Sparkles,
-    description: 'Guided learning with hints',
-  },
-  planning: {
-    label: 'Planning',
-    icon: Target,
-    description: 'Help structure your approach',
-  },
-  debug: {
-    label: 'Debug',
-    icon: Bug,
-    description: 'Find and fix issues',
-  },
+const baseModeConfig: Record<ChatMode, { icon: typeof Sparkles }> = {
+  coach: { icon: Sparkles },
+  planning: { icon: Target },
+  debug: { icon: Bug },
 }
 
 export function GlowingInput({
@@ -46,15 +35,52 @@ export function GlowingInput({
   onModeChange,
   onSend,
   disabled,
+  lang = 'fr',
 }: GlowingInputProps) {
   const [message, setMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  const modeConfig: Record<ChatMode, { label: string; icon: typeof Sparkles; description: string }> =
+    lang === 'fr'
+      ? {
+          coach: {
+            label: 'Coach',
+            icon: baseModeConfig.coach.icon,
+            description: 'Guidage avec indices',
+          },
+          planning: {
+            label: 'Plan',
+            icon: baseModeConfig.planning.icon,
+            description: 'Structurer ta demarche',
+          },
+          debug: {
+            label: 'Debug',
+            icon: baseModeConfig.debug.icon,
+            description: 'Trouver et corriger les problemes',
+          },
+        }
+      : {
+          coach: {
+            label: 'Coach',
+            icon: baseModeConfig.coach.icon,
+            description: 'Guided learning with hints',
+          },
+          planning: {
+            label: 'Planning',
+            icon: baseModeConfig.planning.icon,
+            description: 'Help structure your approach',
+          },
+          debug: {
+            label: 'Debug',
+            icon: baseModeConfig.debug.icon,
+            description: 'Find and fix issues',
+          },
+        }
+
   const currentMode = modeConfig[mode]
   const ModeIcon = currentMode.icon
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
@@ -85,31 +111,31 @@ export function GlowingInput({
 
   return (
     <div className="glow-container relative">
-      {/* Animated glow border */}
       <div className="glow-border" />
-      
-      {/* Inner content */}
-      <div className="relative flex flex-col gap-3 rounded-xl bg-card p-3">
+      <div className="relative rounded-[28px] border border-border/70 bg-card/80 p-4 shadow-sm backdrop-blur">
         <Textarea
           ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask a question or describe your problem..."
-          className="min-h-[60px] resize-none border-0 bg-transparent p-0 text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+          placeholder={
+            lang === 'fr'
+              ? 'Pose une question, décris ton besoin ou demande un plan...'
+              : 'Ask a question, drop a requirement, or request a plan...'
+          }
+          className="min-h-[72px] resize-none border-0 bg-transparent p-0 text-base text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
           disabled={disabled || isSending}
           rows={1}
         />
 
-        <div className="flex items-center justify-between">
-          {/* Mode selector */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 className={cn(
-                  'gap-2 text-muted-foreground hover:text-foreground',
+                  'gap-2 rounded-full border-border/70 bg-background/70 text-xs uppercase tracking-[0.2em] text-muted-foreground',
                   disabled && 'pointer-events-none opacity-50'
                 )}
               >
@@ -142,19 +168,18 @@ export function GlowingInput({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Send button */}
           <Button
             onClick={handleSubmit}
             disabled={!message.trim() || disabled || isSending}
             size="sm"
-            className="gap-2"
+            className="gap-2 rounded-full px-5"
           >
             {isSending ? (
               <Spinner className="h-4 w-4" />
             ) : (
               <Send className="h-4 w-4" />
             )}
-            Send
+            {lang === 'fr' ? 'Envoyer' : 'Send'}
           </Button>
         </div>
       </div>

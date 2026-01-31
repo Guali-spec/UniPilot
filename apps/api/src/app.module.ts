@@ -6,9 +6,19 @@ import { ProjectsModule } from './projects/projects.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { ChatModule } from './chat/chat.module';
 import { LlmModule } from './llm/llm.module';
+import { DocumentsModule } from './documents/documents.module';
+import { RagModule } from './rag/rag.module';
 
 @Module({
-  imports: [PrismaModule, ProjectsModule, SessionsModule, ChatModule, LlmModule],
+  imports: [
+    PrismaModule,
+    ProjectsModule,
+    SessionsModule,
+    ChatModule,
+    LlmModule,
+    DocumentsModule,
+    RagModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

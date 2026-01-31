@@ -1,50 +1,116 @@
+import type {
+  Project,
+  Session,
+  ChatMessage,
+  ChatResponse,
+  Document,
+} from '@/types/unipilot';
 
-import type { Project, Session, ChatMessage, ChatResponse } from '@/types/unipilot';
-
-
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3003';
+const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
+    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     cache: 'no-store',
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `HTTP ${res.status}`);
+    let message = `HTTP ${res.status}`;
+    try {
+      const data = await res.json();
+      if (typeof data?.message === 'string') {
+        message = data.message;
+      } else if (Array.isArray(data?.message) && data.message.length > 0) {
+        message = data.message.join(', ');
+      } else if (typeof data?.error === 'string') {
+        message = data.error;
+      }
+    } catch {
+      const text = await res.text();
+      if (text) message = text;
+    }
+    throw new Error(message);
   }
-
   return res.json() as Promise<T>;
 }
 
 export const api = {
-  createProject: async (data: unknown) =>
-    request('/projects', { method: 'POST', body: JSON.stringify(data) }),
+  getProjects: () => request<Project[]>('/projects'),
+  createProject: (data: any) => request<Project>('/projects', { method: 'POST', body: JSON.stringify(data) }),
 
-  getProjects: async () => request('/projects', { method: 'GET' }),
+  getSessions: (projectId: string) => request<Session[]>(`/sessions?projectId=${encodeURIComponent(projectId)}`),
+  createSession: (data: any) => request<Session>('/sessions', { method: 'POST', body: JSON.stringify(data) }),
 
-  getSessions: async (projectId: string) =>
-    request(`/projects/${projectId}/sessions`, { method: 'GET' }),
+  getChatHistory: (sessionId: string) =>
+    request<ChatMessage[]>(`/chat/history?sessionId=${encodeURIComponent(sessionId)}`),
 
-  createSession: async (data: unknown) =>
-    request('/sessions', { method: 'POST', body: JSON.stringify(data) }),
+  sendMessage: (data: { sessionId: string; mode?: string; message: string; lang?: 'fr' | 'en' }) =>
+    request<ChatResponse>('/chat', { method: 'POST', body: JSON.stringify(data) }),
 
-  getChatHistory: async (sessionId: string) =>
-    request(`/sessions/${sessionId}/chat`, { method: 'GET' }),
+  exportChatMarkdown: async (sessionId: string) => {
+    const res = await fetch(
+      `${baseUrl}/chat/export?sessionId=${encodeURIComponent(sessionId)}`,
+      { cache: 'no-store' },
+    );
+    if (!res.ok) {
+      let message = `HTTP ${res.status}`;
+      try {
+        const data = await res.json();
+        if (typeof data?.message === 'string') {
+          message = data.message;
+        } else if (Array.isArray(data?.message) && data.message.length > 0) {
+          message = data.message.join(', ');
+        } else if (typeof data?.error === 'string') {
+          message = data.error;
+        }
+      } catch {
+        const text = await res.text();
+        if (text) message = text;
+      }
+      throw new Error(message);
+    }
+    return res.text();
+  },
 
-  sendMessage: async (data: unknown) =>
-    request('/chat/send', { method: 'POST', body: JSON.stringify(data) }),
+  exportChatJson: (sessionId: string) =>
+    request<any>(`/chat/export?sessionId=${encodeURIComponent(sessionId)}&format=json`),
 
-  getAntiCheat: async (sessionId: string, limit: number) =>
-    request(`/sessions/${sessionId}/anti-cheat?limit=${limit}`, { method: 'GET' }),
+  getDocuments: (projectId: string) =>
+    request<Document[]>(`/documents?projectId=${encodeURIComponent(projectId)}`),
+  uploadDocument: async (projectId: string, file: File) => {
+    const form = new FormData();
+    form.append('projectId', projectId);
+    form.append('file', file);
 
-  get: <T>(path: string) => request<T>(path),
+    const res = await fetch(`${baseUrl}/documents/upload`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) {
+      let message = `HTTP ${res.status}`;
+      try {
+        const data = await res.json();
+        if (typeof data?.message === 'string') {
+          message = data.message;
+        } else if (Array.isArray(data?.message) && data.message.length > 0) {
+          message = data.message.join(', ');
+        } else if (typeof data?.error === 'string') {
+          message = data.error;
+        }
+      } catch {
+        const text = await res.text();
+        if (text) message = text;
+      }
+      throw new Error(message);
+    }
+    return res.json();
+  },
+  deleteDocument: (documentId: string) =>
+    request<{ deleted: boolean }>(`/documents/${encodeURIComponent(documentId)}`, {
+      method: 'DELETE',
+    }),
 
-  post: <T>(path: string, body: unknown) =>
-    request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  getAntiCheat: (sessionId: string, take = 50) =>
+    request<any[]>(`/sessions/${encodeURIComponent(sessionId)}/anti-cheat?take=${take}`),
 };

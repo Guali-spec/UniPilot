@@ -12,6 +12,15 @@ export class SessionsService {
     });
   }
 
+  async antiCheatEvents(sessionId: string, take = 50) {
+  return this.prisma.antiCheatEvent.findMany({
+    where: { sessionId },
+    orderBy: { createdAt: 'desc' },
+    take,
+  });
+}
+
+
   findByProject(projectId: string) {
     return this.prisma.chatSession.findMany({
       where: { projectId },

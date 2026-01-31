@@ -17,6 +17,7 @@ model Project {
   updatedAt   DateTime    @updatedAt
 
   sessions    ChatSession[]
+  documents   Document[]
 }
 
 model ChatSession {
@@ -27,6 +28,7 @@ model ChatSession {
 
   project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   messages  ChatMessage[]
+  antiCheatEvents AntiCheatEvent[]
 }
 
 model ChatMessage {
@@ -40,3 +42,47 @@ model ChatMessage {
 
   @@index([sessionId])
 }
+
+model AntiCheatEvent {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  label     String
+  reason    String
+  mode      String
+
+  message   String?     // optionnel: extrait du message (ou message complet si tu veux)
+  createdAt DateTime    @default(now())
+
+  @@index([sessionId, createdAt])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  projectId String
+  filename  String
+  mimeType  String
+  size      Int
+  status    String   @default("processing")
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  chunks    DocumentChunk[]
+
+  @@index([projectId, createdAt])
+}
+
+model DocumentChunk {
+  id         String    @id @default(cuid())
+  documentId String
+  index      Int
+  content    String
+  embedding  Unsupported("vector")?
+  createdAt  DateTime  @default(now())
+
+  document   Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+}
+

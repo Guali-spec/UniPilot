@@ -25,6 +25,19 @@ export interface ChatMessage {
   antiCheat?: AntiCheatResult
 }
 
+export interface Document {
+  id: string
+  projectId: string
+  filename: string
+  mimeType: string
+  size: number
+  status: 'processing' | 'ready' | 'failed'
+  createdAt: string
+  _count?: {
+    chunks: number
+  }
+}
+
 export interface AntiCheatResult {
   label: 'allowed' | 'borderline' | 'cheating'
   reason: string
@@ -40,6 +53,7 @@ export interface ChatMeta {
 }
 
 export type ChatMode = 'coach' | 'planning' | 'debug'
+export type UiLanguage = 'fr' | 'en'
 export type ChatResponse = {
   sessionId: string;
   assistant: {

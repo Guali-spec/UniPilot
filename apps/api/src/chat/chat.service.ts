@@ -1,9 +1,20 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Logger,
+  GatewayTimeoutException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChatDto } from './dto/chat.dto';
-import { LlmService } from '../llm/llm.service';
+import {
+  LlmService,
+  LlmTimeoutError,
+  LlmUpstreamError,
+} from '../llm/llm.service';
 import { detectCheating } from '../llm/cheat.detector';
 import { buildAntiCheatInstruction } from '../llm/anti-cheat.policy';
+import { RagService } from '../rag/rag.service';
 
 
 @Injectable()
@@ -13,6 +24,7 @@ export class ChatService {
   constructor(
     private prisma: PrismaService,
     private llm: LlmService,
+    private rag: RagService,
     
   ) {}
 
@@ -96,15 +108,57 @@ Contraintes: ${session.project.constraints ?? 'aucune'}
 
     // 7) appel Gemini
     const modeHint = `MODE: ${mode}`;
+    const languageHint = `LANGUAGE: ${dto.lang === 'fr' ? 'French' : 'English'}`;
 
     
 
-    const t0 = Date.now();
-const llmResult = await this.llm.generate(
-  userMessage,
-  `${modeHint}\n${antiCheatInstruction}\n${context}`,
-  historyText,
-);
+const t0 = Date.now();
+let ragContext = '';
+try {
+  ragContext = await this.rag.buildContext(
+    session.projectId,
+    userMessage,
+    5,
+  );
+} catch (error) {
+  this.logger.warn(
+    `[rag] failed session=${dto.sessionId} msg="${userMessage.slice(0, 80)}"`,
+  );
+}
+const fullContext = ragContext
+  ? `${modeHint}\n${languageHint}\n${antiCheatInstruction}\n${context}\n${ragContext}`
+  : `${modeHint}\n${languageHint}\n${antiCheatInstruction}\n${context}`;
+let llmResult;
+  try {
+  llmResult = await this.llm.generate(
+    userMessage,
+    fullContext,
+    historyText,
+  );
+} catch (err) {
+  if (err instanceof LlmTimeoutError) {
+    this.logger.warn(
+      `[llm] timeout session=${dto.sessionId} msg="${userMessage.slice(0, 80)}"`,
+    );
+    throw new GatewayTimeoutException(
+      'LLM_TIMEOUT: The model took too long to respond. Try again.',
+    );
+  }
+  if (err instanceof LlmUpstreamError) {
+    this.logger.error(
+      `[llm] upstream error session=${dto.sessionId} msg="${userMessage.slice(0, 80)}"`,
+    );
+    throw new ServiceUnavailableException(
+      'LLM_UPSTREAM: The model is unavailable right now. Please retry shortly.',
+    );
+  }
+  this.logger.error(
+    `[llm] unexpected error session=${dto.sessionId} msg="${userMessage.slice(0, 80)}"`,
+  );
+  throw new ServiceUnavailableException(
+    'LLM_ERROR: Unexpected error while contacting the model.',
+  );
+}
 const latencyMs = Date.now() - t0;
 
 const assistantText = llmResult.text;
@@ -134,5 +188,49 @@ const model = llmResult.model;
       where: { sessionId },
       orderBy: { createdAt: 'asc' },
     });
+  }
+
+  async export(sessionId: string, format: 'md' | 'json' = 'md') {
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId },
+      include: {
+        project: true,
+        messages: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+
+    if (!session) throw new NotFoundException('Session not found');
+
+    if (format === 'json') {
+      return {
+        project: {
+          id: session.projectId,
+          title: session.project.title,
+        },
+        session: {
+          id: session.id,
+          name: session.name,
+          createdAt: session.createdAt,
+        },
+        messages: session.messages,
+      };
+    }
+
+    const lines: string[] = [
+      '# UniPilot Chat Export',
+      `Project: ${session.project.title}`,
+      `Session: ${session.name ?? ''}`,
+      `Generated: ${new Date().toISOString()}`,
+      '',
+    ];
+
+    for (const msg of session.messages) {
+      const roleTitle = msg.role === 'user' ? 'User' : 'Assistant';
+      lines.push(`## ${roleTitle}`);
+      lines.push(msg.content);
+      lines.push('');
+    }
+
+    return lines.join('\n');
   }
 }

@@ -10,4 +10,8 @@ export class ChatDto {
   @IsOptional()
   @IsIn(['coach', 'planning', 'debug'])
   mode?: 'coach' | 'planning' | 'debug';
+
+  @IsOptional()
+  @IsIn(['fr', 'en'])
+  lang?: 'fr' | 'en';
 }

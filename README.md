@@ -119,6 +119,8 @@ Crée un fichier `.env` (ou `apps/api/.env`) à partir de `.env.example`.
 - Guide complet (pas à pas) : `docs/unipilot_guide.md`
 - Notes d’architecture : `docs/architecture.md`
 - Décisions techniques : `docs/adr/` (optionnel)
+- Analyse du repo : `docs/repo-analysis.md`
+- Migration vers `main` : `docs/migrate-to-main.md`
 
 ---
 

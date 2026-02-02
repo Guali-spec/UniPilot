@@ -121,6 +121,7 @@ Crée un fichier `.env` (ou `apps/api/.env`) à partir de `.env.example`.
 - Décisions techniques : `docs/adr/` (optionnel)
 - Analyse du repo : `docs/repo-analysis.md`
 - Migration vers `main` : `docs/migrate-to-main.md`
+- Guide d’hébergement (gratuit) : `docs/hosting-guide.md`
 
 ---
 

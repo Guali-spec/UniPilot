@@ -102,6 +102,27 @@ app.enableCors({
 
 ---
 
+## 7) Dépannage (erreurs fréquentes)
+
+### Erreur Prisma P1012 (url/directUrl dans schema)
+Si Render affiche une erreur du type **P1012** indiquant que `url` ou `directUrl`
+ne sont plus supportés dans `schema.prisma`, vérifiez que :
+
+1. Le fichier `apps/api/prisma/schema.prisma` **ne contient pas** de lignes
+   `url = env("DATABASE_URL")` ou `directUrl = env("DIRECT_URL")`.
+2. La config Prisma utilise bien `prisma.config.ts` pour la connection :
+   ```ts
+   export default defineConfig({
+     schema: "prisma/schema.prisma",
+     datasource: {
+       url: env("DATABASE_URL"),
+     },
+   });
+   ```
+3. Render déploie **la dernière version** de votre branche (push + redeploy).
+
+---
+
 Si vous voulez, je peux aussi :
 - Ajouter un **fichier .env.example** complet
 - Préparer une **checklist de déploiement** dans le README

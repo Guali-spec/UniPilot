@@ -7,11 +7,30 @@ import type {
 } from '@/types/unipilot';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const USER_ID_KEY = 'unipilot_user_id';
+
+function getUserId() {
+  if (typeof window === 'undefined') return 'server';
+  let userId = window.localStorage.getItem(USER_ID_KEY);
+  if (!userId) {
+    const random =
+      typeof window.crypto?.randomUUID === 'function'
+        ? window.crypto.randomUUID()
+        : `user_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    userId = random;
+    window.localStorage.setItem(USER_ID_KEY, userId);
+  }
+  return userId;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': getUserId(),
+      ...(init?.headers ?? {}),
+    },
     cache: 'no-store',
   });
 
@@ -51,7 +70,7 @@ export const api = {
   exportChatMarkdown: async (sessionId: string) => {
     const res = await fetch(
       `${baseUrl}/chat/export?sessionId=${encodeURIComponent(sessionId)}`,
-      { cache: 'no-store' },
+      { cache: 'no-store', headers: { 'X-User-Id': getUserId() } },
     );
     if (!res.ok) {
       let message = `HTTP ${res.status}`;
@@ -86,6 +105,7 @@ export const api = {
     const res = await fetch(`${baseUrl}/documents/upload`, {
       method: 'POST',
       body: form,
+      headers: { 'X-User-Id': getUserId() },
     });
     if (!res.ok) {
       let message = `HTTP ${res.status}`;

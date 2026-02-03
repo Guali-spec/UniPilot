@@ -16,6 +16,7 @@ interface SidebarProps {
   onThemeChange: (theme: 'light' | 'dark') => void
   lang: UiLanguage
   onLangChange: (lang: UiLanguage) => void
+  className?: string
 }
 
 export function Sidebar({
@@ -28,9 +29,15 @@ export function Sidebar({
   onThemeChange,
   lang,
   onLangChange,
+  className,
 }: SidebarProps) {
   return (
-    <aside className="sticky top-0 flex h-screen w-72 flex-col border-r border-border/70 bg-sidebar/80 backdrop-blur">
+    <aside
+      className={cn(
+        'sticky top-0 flex h-screen w-72 flex-col border-r border-border/70 bg-sidebar/80 backdrop-blur',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between border-b border-border/60 px-5 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15 text-primary">

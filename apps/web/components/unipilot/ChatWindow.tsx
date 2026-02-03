@@ -148,8 +148,8 @@ export function ChatWindow({
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/80 px-6 py-4 backdrop-blur">
-        <div className="flex items-center gap-6">
+      <header className="sticky top-0 z-20 flex flex-col gap-4 border-b border-border/60 bg-background/80 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-6">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
               {lang === 'fr' ? 'Projet actif' : 'Active project'}
@@ -158,7 +158,7 @@ export function ChatWindow({
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+              <button className="flex max-w-full items-center gap-2 rounded-full border border-border/70 bg-card/80 px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
                 {currentSession.name}
                 <ChevronDown className="h-3 w-3" />
               </button>
@@ -180,7 +180,7 @@ export function ChatWindow({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2 rounded-full">
@@ -212,7 +212,7 @@ export function ChatWindow({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Messages area */}
         <ScrollArea className="h-full flex-1 min-h-0">
-          <div className="mx-auto max-w-3xl space-y-4 px-6 py-8">
+          <div className="mx-auto max-w-3xl space-y-4 px-4 py-6 sm:px-6 sm:py-8">
           {isLoadingMessages ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -263,7 +263,7 @@ export function ChatWindow({
         </ScrollArea>
 
         {/* Input area */}
-        <div className="sticky bottom-0 z-20 border-t border-border/60 bg-background/90 px-6 py-5 backdrop-blur">
+        <div className="sticky bottom-0 z-20 border-t border-border/60 bg-background/90 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
           <div className="mx-auto max-w-3xl">
             <GlowingInput
               mode={mode}

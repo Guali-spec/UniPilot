@@ -6,6 +6,9 @@ import { ChatWindow } from '@/components/unipilot/ChatWindow'
 import { ProjectDialog, type ProjectFormData } from '@/components/unipilot/ProjectDialog'
 import { SessionDialog } from '@/components/unipilot/SessionDialog'
 import { Toaster } from '@/components/ui/sonner'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Menu } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import type { Project, Session, ChatMessage, ChatMode, ChatMeta, AntiCheatResult, UiLanguage } from '@/types/unipilot'
@@ -348,19 +351,47 @@ try {
 
   return (
     <div className="flex h-screen overflow-hidden bg-transparent">
-      <Sidebar
-        projects={projects}
-        selectedProjectId={selectedProjectId}
-        onSelectProject={handleSelectProject}
-        onNewProject={() => setProjectDialogOpen(true)}
-        isLoading={isLoadingProjects}
-        theme={theme}
-        onThemeChange={setTheme}
-        lang={lang}
-        onLangChange={setLang}
-      />
+      <div className="hidden lg:flex">
+        <Sidebar
+          projects={projects}
+          selectedProjectId={selectedProjectId}
+          onSelectProject={handleSelectProject}
+          onNewProject={() => setProjectDialogOpen(true)}
+          isLoading={isLoadingProjects}
+          theme={theme}
+          onThemeChange={setTheme}
+          lang={lang}
+          onLangChange={setLang}
+        />
+      </div>
 
-      <main className="flex-1 min-h-0 overflow-hidden">
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0">
+              <Sidebar
+                projects={projects}
+                selectedProjectId={selectedProjectId}
+                onSelectProject={handleSelectProject}
+                onNewProject={() => setProjectDialogOpen(true)}
+                isLoading={isLoadingProjects}
+                theme={theme}
+                onThemeChange={setTheme}
+                lang={lang}
+                onLangChange={setLang}
+                className="h-full w-full border-r-0"
+              />
+            </SheetContent>
+          </Sheet>
+          <div className="text-sm font-semibold text-foreground">UniPilot</div>
+          <div className="h-9 w-9" />
+        </div>
+
         <ChatWindow
           project={selectedProject}
           sessions={sessions}
@@ -396,11 +427,11 @@ try {
 
       <Toaster position="bottom-right" />
       {process.env.NODE_ENV !== 'production' && (
-        <div className="pointer-events-none fixed bottom-4 left-4 rounded-full border border-border/60 bg-card/80 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground shadow-sm backdrop-blur">
+        <div className="pointer-events-none fixed bottom-4 left-4 hidden rounded-full border border-border/60 bg-card/80 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground shadow-sm backdrop-blur sm:block">
           API: {process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'}
         </div>
       )}
-      <div className="pointer-events-none fixed bottom-4 right-4 rounded-full border border-border/60 bg-card/80 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground shadow-sm backdrop-blur">
+      <div className="pointer-events-none fixed bottom-4 right-4 hidden rounded-full border border-border/60 bg-card/80 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground shadow-sm backdrop-blur sm:block">
         GUISSOU Ali | AI Engineer
       </div>
     </div>

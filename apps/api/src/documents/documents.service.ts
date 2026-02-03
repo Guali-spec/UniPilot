@@ -20,35 +20,35 @@ export class DocumentsService {
     private readonly llm: LlmService,
   ) {}
 
-  async list(projectId: string) {
+  async list(projectId: string, userId: string) {
     return this.prisma.document.findMany({
-      where: { projectId },
+      where: { projectId, project: { userId } },
       orderBy: { createdAt: 'desc' },
       include: { _count: { select: { chunks: true } } },
     });
   }
 
-  async get(documentId: string) {
-    const doc = await this.prisma.document.findUnique({
-      where: { id: documentId },
+  async get(documentId: string, userId: string) {
+    const doc = await this.prisma.document.findFirst({
+      where: { id: documentId, project: { userId } },
       include: { _count: { select: { chunks: true } } },
     });
     if (!doc) throw new NotFoundException('Document not found');
     return doc;
   }
 
-  async remove(documentId: string) {
-    const doc = await this.prisma.document.findUnique({
-      where: { id: documentId },
+  async remove(documentId: string, userId: string) {
+    const doc = await this.prisma.document.findFirst({
+      where: { id: documentId, project: { userId } },
     });
     if (!doc) throw new NotFoundException('Document not found');
     await this.prisma.document.delete({ where: { id: documentId } });
     return { deleted: true };
   }
 
-  async upload(projectId: string, file: Express.Multer.File) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
+  async upload(projectId: string, file: Express.Multer.File, userId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, userId },
     });
     if (!project) throw new NotFoundException('Project not found');
 

@@ -6,11 +6,14 @@ import { CreateProjectDto } from './dto/create-project.dto';
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
-  create(dto: CreateProjectDto) {
-    return this.prisma.project.create({ data: dto });
+  create(dto: CreateProjectDto, userId: string) {
+    return this.prisma.project.create({ data: { ...dto, userId } });
   }
 
-  findAll() {
-    return this.prisma.project.findMany({ orderBy: { createdAt: 'desc' } });
+  findAll(userId: string) {
+    return this.prisma.project.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

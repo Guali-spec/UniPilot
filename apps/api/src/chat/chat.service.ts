@@ -28,9 +28,9 @@ export class ChatService {
     
   ) {}
 
-  async send(dto: ChatDto) {
-    const session = await this.prisma.chatSession.findUnique({
-      where: { id: dto.sessionId },
+  async send(dto: ChatDto, userId: string) {
+    const session = await this.prisma.chatSession.findFirst({
+      where: { id: dto.sessionId, project: { userId } },
       include: { project: true },
     });
     if (!session) throw new NotFoundException('Session not found');
@@ -183,16 +183,16 @@ const model = llmResult.model;
 
   }
 
-  history(sessionId: string) {
+  history(sessionId: string, userId: string) {
     return this.prisma.chatMessage.findMany({
-      where: { sessionId },
+      where: { sessionId, session: { project: { userId } } },
       orderBy: { createdAt: 'asc' },
     });
   }
 
-  async export(sessionId: string, format: 'md' | 'json' = 'md') {
-    const session = await this.prisma.chatSession.findUnique({
-      where: { id: sessionId },
+  async export(sessionId: string, format: 'md' | 'json' = 'md', userId: string) {
+    const session = await this.prisma.chatSession.findFirst({
+      where: { id: sessionId, project: { userId } },
       include: {
         project: true,
         messages: { orderBy: { createdAt: 'asc' } },

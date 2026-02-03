@@ -8,6 +8,7 @@ datasource db {
 
 model Project {
   id          String      @id @default(cuid())
+  userId      String      @default("legacy")
   title       String
   level       String?
   domain      String?
@@ -18,6 +19,8 @@ model Project {
 
   sessions    ChatSession[]
   documents   Document[]
+
+  @@index([userId, createdAt])
 }
 
 model ChatSession {

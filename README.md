@@ -1,7 +1,7 @@
-# UniPilot — LLM Copilot pour Projets Universitaires 🎓🤖
-UniPilot est un **Copilot intelligent** qui aide les étudiants à **comprendre, structurer, concevoir et documenter** leurs projets académiques, étape par étape.
+﻿# UniPilot — LLM Copilot pour projets universitaires
+UniPilot est un **copilote intelligent** qui aide les étudiants à **comprendre, structurer, concevoir et documenter** leurs projets académiques, étape par étape.
 
-> UniPilot n’est pas un “générateur de projet complet”.  
+> UniPilot n’est pas un “générateur de projet complet”.
 > C’est un **mentor technique & académique** : il explique, guide, vérifie la cohérence, et s’appuie sur tes documents (RAG) pour répondre de façon fiable.
 
 ---
@@ -58,43 +58,79 @@ unipilot/
 ---
 
 ## ✅ Prérequis
-- Node.js LTS (18+ ou 20+)
+- Node.js LTS (20+ recommandé)
+- npm (ou pnpm)
 - Git
-- Docker
-- VS Code
+- Docker + Docker Compose
 - Clé API Google AI Studio (Gemini)
+- PostgreSQL (si tu ne passes pas par Docker)
 
 ---
 
-## 🚀 Démarrage rapide (dev)
-> Les commandes exactes dépendront de ton setup final. Ce bloc te donne l’idée générale.
+## 🚀 Installation locale (dev)
 
-### 1) Infra (DB)
-- Lancer Postgres (Docker) :
-  - `docker compose up -d` (depuis `infra/docker/` ou la racine selon ton choix)
+### 1) Cloner le repo
+```
+git clone https://github.com/Guali-spec/UniPilot.git
+cd UniPilot
+```
 
-### 2) Backend (NestJS)
-- Installer :
-  - `cd apps/api`
-  - `npm install`
-- Lancer :
-  - `npm run start:dev`
+### 2) Base de données (Postgres)
+Option Docker (recommandé) :
+```
+cd infra/docker
+docker compose up -d
+```
 
-### 3) Frontend (Next.js)
-- Installer :
-  - `cd apps/web`
-  - `npm install`
-- Lancer :
-  - `npm run dev`
+Option local :
+- Démarre PostgreSQL en local
+- Crée une base (ex: `unipilot_db`)
+
+### 3) Backend (NestJS)
+```
+cd apps/api
+npm install
+```
+
+Configurer l’environnement :
+- Crée `apps/api/.env` à partir de `.env.example`
+- Renseigne `DATABASE_URL` et `GOOGLE_AI_STUDIO_API_KEY`
+
+Générer Prisma + appliquer les migrations :
+```
+npm run prisma:generate
+npx prisma migrate dev
+```
+
+Lancer l’API :
+```
+npm run start:dev
+```
+
+### 4) Frontend (Next.js)
+```
+cd apps/web
+npm install
+```
+
+Configurer l’environnement :
+- Crée `apps/web/.env.local`
+- Ajoute `NEXT_PUBLIC_API_URL=http://localhost:3001`
+
+Lancer le frontend :
+```
+npm run dev
+```
 
 ---
 
 ## 🔐 Variables d’environnement
-Crée un fichier `.env` (ou `apps/api/.env`) à partir de `.env.example`.
-
-### Exemple (à adapter)
+Backend (`apps/api/.env`) :
 - `DATABASE_URL=postgresql://...`
 - `GOOGLE_AI_STUDIO_API_KEY=...`
+
+Frontend (`apps/web/.env.local`) :
+- `NEXT_PUBLIC_API_URL=http://localhost:3001`
 
 ⚠️ Ne commit jamais tes secrets :
 - `.env` doit rester hors Git (via `.gitignore`)
